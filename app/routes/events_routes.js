@@ -24,7 +24,11 @@ module.exports = (app, db) => {
                     .shift()
                     .value;
                 
-                events.add();
+                if (events.has(id)) {
+                    let eventsArr = events.get(id);
+                    eventsArr.push(event);
+                    events.set(id, eventsArr);
+                } else events.set(id, [event]);
             });
 
             res.send(null);
