@@ -1,4 +1,4 @@
-const nodeRoutes = require("./node_routes");
+const nodeRoutes = require("./events_routes");
 
 module.exports = (app, db) => {
   nodeRoutes(app, db);
