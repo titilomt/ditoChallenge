@@ -29,7 +29,28 @@ module.exports = (app, db) => {
             });
 
             timeline = [];
-            eventsMap.forEach(events => {
+            promises = [];
+            eventsMap.forEach(events => 
+                promises.push(this.buildTimelineEventTemplate(timeline, events, eventTemplate, productTemplate))
+            );
+
+            Promise.all(promises).then(_ => {
+                timeline.sort((a, b) => (a.timestamp < b.timestamp) ? 1 : ((b.timestamp < a.timestamp) ? -1 : 0));
+                res.send(timeline);
+            });
+        });
+    });
+
+    this.filterCustomData = (custom_data, keyString) => {
+        return custom_data
+            .filter(data => data.key === keyString)
+            .shift()
+            .value;
+    };
+
+    this.buildTimelineEventTemplate = (timeline, events, eventTemplate, productTemplate) => {
+        return new Promise((resolve, reject) => {
+            try {
                 eventTemplate.products = [];
 
                 events.forEach(event => {
@@ -49,17 +70,8 @@ module.exports = (app, db) => {
                 });
 
                 timeline.push(Object.assign({}, eventTemplate));
-            });
-
-            timeline.sort((a, b) => (a.timestamp < b.timestamp) ? 1 : ((b.timestamp < a.timestamp) ? -1 : 0));
-            res.send(timeline);
+                resolve(true);
+            } catch (err) { reject(err) }
         });
-    });
-
-    this.filterCustomData = (custom_data, keyString) => {
-        return custom_data
-            .filter(data => data.key === keyString)
-            .shift()
-            .value;
-    };
+    }
 };
