@@ -4,44 +4,62 @@ module.exports = (app, db) => {
     app.get("/", (req, res) => {
         request("https://storage.googleapis.com/dito-questions/events.json", {json: true}, (err, response, body) => {
 
-        let eventTemplate = {
+            let eventTemplate = {
                 timestamp: "string",
                 revenue: 0.0,
                 transaction_id: "string",
                 store_name: "string",
-                products: [
-                    {
-                        name: "string",
-                        price: 0.0
-                    }
-                ]
+                products: []
             };
 
-            let events = Map();
+            let productTemplate = {
+                name: "string",
+                price: 0.0
+            }
+
+            let eventsMap = new Map();
             body.events.forEach(event => {
-                const id = event.custom_data
-                    .filter(data => data.key === "transaction_id")
-                    .shift()
-                    .value;
+                const id = this.filterCustomData(event.custom_data, "transaction_id");
                 
-                if (events.has(id)) {
-                    let eventsArr = events.get(id);
+                if (eventsMap.has(id)) {
+                    let eventsArr = eventsMap.get(id);
                     eventsArr.push(event);
-                    events.set(id, eventsArr);
-                } else events.set(id, [event]);
+                    eventsMap.set(id, eventsArr);
+                } else eventsMap.set(id, [event]);
             });
 
-            res.send(null);
-            // const ids = [...(new Set(body.events.map(event => {
-            //     return event.custom_data
-            //         .filter(data => data.key === "transaction_id")
-            //         .shift()
-            //         .value;
-            // })))];
+            timeline = [];
+            eventsMap.forEach(events => {
+                eventTemplate.products = [];
 
-            // const events = ids.map(id => {
-            //     return body.events.filter(event => event.custom_data.filter)
-            // });
+                events.forEach(event => {
+                    switch (event.event) {
+                        case "comprou":
+                            eventTemplate.timestamp      = event.timestamp;
+                            eventTemplate.revenue        = event.revenue;
+                            eventTemplate.transaction_id = this.filterCustomData(event.custom_data, "transaction_id");
+                            eventTemplate.store_name     = this.filterCustomData(event.custom_data, "store_name");
+                            break;
+                        case "comprou-produto":
+                            productTemplate.name  = this.filterCustomData(event.custom_data, "product_name");
+                            productTemplate.price = this.filterCustomData(event.custom_data, "product_price");
+                            eventTemplate.products.push(Object.assign({}, productTemplate));
+                            break;
+                    }
+                });
+
+                timeline.push(Object.assign({}, eventTemplate));
+            });
+
+            timeline.sort((a, b) => (a.timestamp < b.timestamp) ? 1 : ((b.timestamp < a.timestamp) ? -1 : 0));
+            res.send(timeline);
         });
     });
+
+    this.filterCustomData = (custom_data, keyString) => {
+        return custom_data
+            .filter(data => data.key === keyString)
+            .shift()
+            .value;
+    };
 };
