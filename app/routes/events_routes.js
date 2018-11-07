@@ -1,9 +1,17 @@
 const request = require("request");
 
 module.exports = (app, db) => {
-    app.get("/", (req, res) => {
+    app.post("/pushEvents", (req, res) => {
+        req.body.map(event => {
+            
+        });
+    });
+
+    app.get("/timeline", (req, res) => {
         request("https://storage.googleapis.com/dito-questions/events.json", {json: true}, (err, response, body) => {
 
+            timeline = [];
+            
             let eventTemplate = {
                 timestamp: "string",
                 revenue: 0.0,
@@ -28,7 +36,6 @@ module.exports = (app, db) => {
                 } else eventsMap.set(id, [event]);
             });
 
-            timeline = [];
             promises = [];
             eventsMap.forEach(events => 
                 promises.push(this.buildTimelineEventTemplate(timeline, events, eventTemplate, productTemplate))
