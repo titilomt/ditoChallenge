@@ -5,20 +5,22 @@ const mysql       = require("mysql");
 const app = express();
 
 const port = 9090;
+app.require('./app/src')(app, {});
 
-const con = mysql.createConnection({
-    host: "db4free.net",
-    user: "felipemasseo",
-    password: "mysql12345"
-});
+app.listen(port, _ => console.log(`Alive @ ${port}`));
 
-con.connect(err => {
-    if (err) throw err;
-    console.log("Connected.");
+// const con = mysql.createConnection({
+//     host: "",
+//     user: "",
+//     password: ""
+// });
 
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: true }));
+// con.connect(err => {
+//     if (err) throw err;
+//     console.log("Connected.");
 
-    require('./app/routes')(app, {});
-    app.listen(port, _ => console.log(`Alive @ ${port}`));
-});
+//     app.use(bodyParser.json());
+//     app.use(bodyParser.urlencoded({ extended: true }));
+
+    
+// });
